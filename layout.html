@@ -1,0 +1,57 @@
+<html>
+<head>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.0.0/chartjs-plugin-annotation.js"></script>
+<script src="js/chart-readualizer.js"></script>
+
+</head>
+<body>
+<div class="container-xxl">
+
+<div class="row">
+  <div class="row p-2">
+    <div class="col-md-3">
+      <label for="file-input" class="form-label form-label-sm">Upload Data File</label>
+      <input type="file" class="form-control form-control-sm" id="file-input">
+    </div>
+    <div class="col-md-3">
+      <label for="date-range-start" class="form-label form-label-sm">Date Range Start</label>
+      <input type="input" class="form-control form-control-sm" id="date-range-start">
+    </div>
+    <div class="col-md-3">
+      <label for="date-range-end" class="form-label form-label-sm">Date Range End</label>
+      <input type="input" class="form-control form-control-sm" id="date-range-end">
+    </div>
+    <div class="col-md-3">
+      <button onClick="injectDetectionScript();">Update Logic</button> 
+      <button onClick="resetData();">Reset Data</button>
+      <button onClick="rerun();">Rerun</button> 
+    </div>
+  </div>
+  <div class="col-md-7">
+      <div class="row row-cols-1 row-cols-md-1 g-4 text-center" id="chart-board"></div>
+  </div>
+  <div class="col-md-5">
+    <div class="row g-3">
+      <div class="col-md-12">
+        <label for="detection-script" class="form-label">Detection Script</label>
+        <textarea class="form-control form-control-sm" id="detection-script" rows="30"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.getElementById('file-input')
+.addEventListener('change', readSingleFile, false);
+</script>
+
+</body>
+</html>

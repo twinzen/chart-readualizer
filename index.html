@@ -1,0 +1,205 @@
+<html>
+<header>
+
+<style>
+div.chart-continer {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+    overflow-x: scroll;
+}
+
+div.chart-canvas {
+    background-color: lightblue;
+    
+}
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script type="application/javascript">
+
+  
+function refresh(table) {
+    const newDataset = {
+        label: 'A',
+        data: table[4]
+    };
+    for (let i in table[0]) {
+        myChart.data.labels.push(table[0][i]);
+    }
+    myChart.data.datasets.push(newDataset);
+    myChart.update();
+}
+
+  function readSingleFile(e) {
+    var file = e.target.files[0];
+    if (!file) {
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var contents = e.target.result;
+      //console.log(contents);
+      var table = csvToArray(contents);
+      console.log(table);
+      //refresh(table);
+      //renderChart('A',table[0],table[4]);
+      for(let i=0; i<=table[4].length; i++) {  
+        detectCpuAndHandle(table[0], table[4], (90+i));
+      }
+    };
+    var csvText = reader.readAsText(file);
+  }
+
+  function uuidv4() {
+      return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
+    } 
+  
+function renderChart(lable, labels, data) {
+    
+    let suffix = uuidv4();
+    
+    const newCanvasHtml = '<div><canvas id="myChart'+suffix+'" width="300" height="200"></canvas></div>';
+    $('.chart-canvas').append(newCanvasHtml);
+    
+    const config = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: lable,
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: data,
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+            }
+    };
+    
+    const newChart = new Chart(
+            $('#myChart'+suffix),
+            config
+    );
+}
+  
+  
+  
+  function csvToArray(str, delimiter = ",") {
+
+    const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+
+    var columns = new Array();
+
+    const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+
+    console.log(rows.length);
+  
+    for (var i in rows) {
+      const values = rows[i].split(delimiter);
+      for (var j in values) {
+        if (typeof columns[j] == 'undefined')
+          columns[j]=new Array();
+        columns[j].push(values[j])
+      }
+    }
+
+    return columns;
+  }
+  
+  function detectCpuAndHandle (dates, prices, startDay) {
+    const HANDLE_LENGHT = 20;
+    const CUP_WIDTH_MAX = 60;
+    const CUP_WIDTH_MIN = 20;
+    const CUP_LH_DEPTH_PER = 0.3;
+    const TOLERANCE_PER = 0.1;
+    const LH_RH_PER = 0.5;
+    
+    
+    let rightHigh = 0;
+    let rightHighDay = startDay;
+    let leftHigh = prices[startDay];
+    let leftHighDay = startDay;
+    let lowest = prices[startDay]; 
+    let lowestDay = startDay;
+    
+    for (let i=startDay-CUP_WIDTH_MAX; i<=startDay; i++) {
+      // find left high
+      if (leftHigh<prices[i]) {
+        leftHigh=prices[i];
+        leftHighDay = i;
+      }
+      
+      // find lowest
+      if (lowest>prices[i]) {
+        lowest = prices[i];
+        lowestDay = i;
+      }
+    
+      // find right high
+      if (rightHigh<prices[i] && i>lowestDay) {
+        rightHigh=prices[i];
+        rightHighDay = i;
+      }
+      
+      // reset if the cup width is too small
+      if (leftHighDay<lowestDay 
+            && lowestDay<rightHighDay 
+            && (rightHighDay-leftHighDay) < CUP_WIDTH_MIN
+            && (leftHigh-rightHigh)/leftHigh < TOLERANCE_PER) {
+         rightHigh = 0;
+         leftHigh = prices[rightHighDay];
+         leftHighDay = rightHighDay;
+         lowest = prices[rightHighDay]; 
+         lowestDay = rightHighDay; 
+      }
+      
+    }
+    
+    
+    let message = "Detected Day "+startDay+" / "+dates[startDay-CUP_WIDTH_MAX]+" to "+dates[startDay]+": Left-High="+dates[leftHighDay]+"("+leftHigh+"), Lowest="+dates[lowestDay]+"("+lowest+"), Right-High="+dates[rightHighDay]+"("+rightHigh+")";
+    
+    if (leftHighDay<lowestDay 
+           && lowestDay<rightHighDay 
+           && leftHigh>lowest
+           && rightHigh>lowest
+           && leftHigh>rightHigh
+           && rightHighDay-leftHighDay > CUP_WIDTH_MIN
+           && (leftHigh-lowest)/leftHigh > CUP_LH_DEPTH_PER
+           && (rightHigh-lowest)/(leftHigh-lowest) > LH_RH_PER) {
+      console.error(message);
+      
+      
+      
+      renderChart(''+dates[leftHighDay]+' to '+dates[rightHighDay],dates.slice(leftHighDay-5,rightHighDay+100),prices.slice(leftHighDay-5,rightHighDay+100));
+    } else {
+      console.log(message);
+    }
+  
+  }
+  
+</script>
+
+</header>
+<body>
+    <input type="file" id="file-input" />
+    <div class="chart-continer">
+        <div class="chart-canvas">
+        </div>
+    </div>
+    <script>
+  document.getElementById('file-input')
+  .addEventListener('change', readSingleFile, false);
+  
+</script>
+
+</body>
+
+</html>

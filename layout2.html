@@ -1,0 +1,152 @@
+<html>
+<head>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>  
+
+function injectDetectionScript(){
+  $('body').append('<script type="text/javascript">function detectCpuAndHandle (dates, prices, startDay) { '+$('#detection-script').val()+' }<\/script>');
+  //$('body').append('<script type="text/javascript">alert("test")<\/script>');
+}
+
+function readSingleFile(e) {
+  var file = e.target.files[0];
+  if (!file) {
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var contents = e.target.result;
+    //console.log(contents);
+    var table = csvToArray(contents);
+    console.log(table);
+    //refresh(table);
+    //renderChart('A',table[0],table[4]);
+    for(let i=0; i<=table[4].length; i++) {  
+      detectCpuAndHandle(table[0], table[4], (90+i));
+    }
+  };
+  var csvText = reader.readAsText(file);
+}
+
+function csvToArray(str, delimiter = ",") {
+
+  const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+  
+  var columns = new Array();
+  
+  const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+  
+  console.log(rows.length);
+  
+  for (var i in rows) {
+    const values = rows[i].split(delimiter);
+    for (var j in values) {
+      if (typeof columns[j] == 'undefined')
+        columns[j]=new Array();
+      columns[j].push(values[j])
+  }
+}
+
+  return columns;
+}
+
+function uuidv4() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
+function renderChart(lable, labels, data) {
+  
+  let suffix = uuidv4();
+  
+  //const chartCardHtml = '<div><canvas id="myChart'+suffix+'" width="300" height="200"></canvas></div>';
+  
+  let chartCardHtml = ''; 
+  chartCardHtml += '<div class="col">';
+  chartCardHtml += '    <div class="card">';
+  chartCardHtml += '      <div class="card-body">';
+  chartCardHtml += '      <h5 class="card-title">Card title</h5>';
+  chartCardHtml += '      <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>';
+  chartCardHtml += '      </div>';
+  chartCardHtml += '      <canvas id="myChart'+suffix+'"></canvas>';
+  chartCardHtml += '    </div>';
+  chartCardHtml += '  </div>';
+
+  
+  
+  $('#chart-board').append(chartCardHtml);
+  
+  const config = {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: lable,
+          backgroundColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(255, 99, 132)',
+          data: data,
+        }]
+      },
+      options: {
+        plugins :{ legend: {display:false}}
+      }
+  };
+  
+  console.error( $('#myChart'+suffix));
+  
+  const newChart = new Chart(
+      $('#myChart'+suffix),
+      config
+  );
+}
+
+function resetData() {
+  $('#chart-board').html('');
+}
+  
+</script>
+
+</head>
+<body>
+<div class="container-xxl">
+
+<div class="row">
+  <div class="col-md-7">
+      <div class="row row-cols-1 row-cols-md-1 g-4 text-center" id="chart-board"></div>
+  </div>
+  <div class="col-md-5">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="file-input" class="form-label">Upload Data File</label>
+        <input type="file" class="form-control" id="file-input">
+      </div>
+      <div class="col-md-6">
+        <label for="inputPassword4" class="form-label">Password</label>
+        <input type="password" class="form-control" id="inputPassword4">
+      </div>
+      <div class="col-md-12">
+        <button onClick="injectDetectionScript();">Update Logic</button> 
+        <button onClick="resetData();">Reset Data</button> 
+        <label for="detection-script" class="form-label">Detection Script</label>
+        <textarea class="form-control form-control-sm" id="detection-script" rows="30"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.getElementById('file-input')
+.addEventListener('change', readSingleFile, false);
+</script>
+
+</body>
+</html>
